@@ -20,10 +20,10 @@
 
 
 (defclass edge (cell)
-  ((lower-bound :type point
+  ((lower-bound :type fixnum
                 :initarg :lower-bound
                 :accessor lower-bound)
-   (upper-bound :type point
+   (upper-bound :type fixnum
                 :initarg :upper-bound
                 :accessor upper-bound)))
 
@@ -56,7 +56,10 @@
           :type hash-table)
    (points :initform (make-hash-table)
            :accessor points
-           :type hash-table)))
+           :type hash-table)
+   (adjacencies :initform (make-hash-table)
+                :accessor adjacencies
+                :type hash-table)))
 
 (define-condition invalid-ptag-error (error)
   ((ptag :initarg :ptag
@@ -103,6 +106,7 @@
            (type (vector cell) cells)
            (type cell cell))
   (let ((ptag (length cells)))
+    (declare (type fixnum ptag))
     (setf (ptag cell)  ptag)
     (vector-push-extend cell cells)
     (setf (gethash ptag ht) cell)
@@ -119,12 +123,19 @@
 (defun create-edge (brep-container lower upper)
   (declare (type brep-container brep-container)
            (type fixnum lower upper))
-  (with-slots (cells edges) brep-container
-    (add-cell cells
-              edges
-              (make-instance 'edge
-                             :lower-bound lower
-                             :upper-bound upper))))
+  (with-slots (cells edges adjacencies) brep-container
+    (let ((new-ptag (add-cell cells
+                              edges
+                              (make-instance 'edge
+                                             :lower-bound lower
+                                             :upper-bound upper))))
+      (push lower (gethash new-ptag adjacencies))
+      (push upper (gethash new-ptag adjacencies))
+      (push new-ptag (gethash lower adjacencies))
+      (push new-ptag (gethash upper adjacencies))
+
+
+      new-ptag)))
 
 (defun list-of-fixnum-p (list)
   "Return t if LIST is non nil and contains only fixnum."
@@ -136,18 +147,28 @@
 
 (defun create-face (brep-container &rest edge-ids)
   (declare (type brep-container brep-container)
-           (type list-of-ints  edge-ids))
-  (with-slots (cells faces) brep-container
-    (add-cell cells
-              faces
-              (make-instance 'face
-                             :edges edge-ids))))
+           (type list-of-ints edge-ids))
+  (with-slots (cells faces adjacencies) brep-container
+    (let ((new-ptag (add-cell cells
+                              faces
+                              (make-instance 'face
+                                             :edges edge-ids))))
+      (loop :for id :in edge-ids
+            :do
+               (push new-ptag (gethash id adjacencies))
+               (push id (gethash new-ptag adjacencies)))
+      new-ptag)))
 
 (defun create-body (brep-container &rest face-ids)
   (declare (type brep-container brep-container)
            (type list-of-ints face-ids))
-  (with-slots (cells bodies) brep-container
-    (add-cell cells
-              bodies
-              (make-instance 'body
-                             :faces face-ids))))
+  (with-slots (cells  adjacencies bodies) brep-container
+    (let ((new-ptag (add-cell cells
+                              bodies
+                              (make-instance 'body
+                                             :faces face-ids))))
+      (loop :for id :in face-ids
+            :do
+               (push new-ptag(gethash id adjacencies))
+               (push id (gethash new-ptag adjacencies)))
+      new-ptag)))
