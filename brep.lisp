@@ -13,9 +13,11 @@
          :accessor ptag
          :type fixnum)))
 
+
 (defclass point (cell)
   ((vertex :initarg :vertex
            :type :vec3)))
+
 
 (defclass edge (cell)
   ((lower-bound :type point
@@ -56,6 +58,26 @@
            :accessor points
            :type hash-table)))
 
+(defgeneric evaluate (brep-container cell &rest args)
+  )
+
+
+(defgeneric dimension (cell)
+  (:documentation "Return the dimension of the cell."))
+
+(defmethod dimension ((cell point))
+  0)
+(defmethod dimension ((cell edge))
+  1)
+(defmethod dimension ((cell face))
+  2)
+(defmethod dimension ((cell body))
+  3)
+
+
+(defmethod evaluate (brep-container (cell edge) &rest args)
+  (let ((t-val (car args)))
+    t-val))
 
 
 (defun add-cell (cells ht cell)

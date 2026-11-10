@@ -19,6 +19,8 @@
    #:edge
    #:face
    #:body
+   #:dimension
+   #:evaluate
 
    ;; A collection of related BREP
    #:brep-container
