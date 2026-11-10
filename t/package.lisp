@@ -29,13 +29,25 @@
 
          (the-face (brep:create-face bc edge0 edge1 edge2 edge3)))
 
-    (with-slots (brep::faces brep::points brep::edges brep::cells) bc
+    (with-slots
+          (brep::faces brep::points brep::edges brep::cells) bc
+
+
+      (is (= 9 (length brep::cells)))
+
       (is (= 1 (hash-table-count brep::faces)))
       (is (= 4 (hash-table-count brep::edges)))
       (is (= 4 (hash-table-count brep::points)))
-      (is (= 9 (length brep::cells)))
+
       (is (= 4 (length (brep::edges (brep:get-cell bc the-face)))))
+
       (is (equal (list edge0 edge1 edge2 edge3)
-                 (brep::edges (brep:get-cell bc the-face)))))))
+                 (brep::edges (brep:get-cell bc the-face))))
+
+      (is (= 2 (brep:dimension (get-cell bc the-face))))
+      (is (= 1 (brep:dimension (get-cell bc edge3))))
+      (is (= 0 (brep:dimension (get-cell bc pt2))))
+
+      )))
 
 
