@@ -58,6 +58,24 @@
            :accessor points
            :type hash-table)))
 
+(define-condition invalid-ptag-error (error)
+  ((ptag :initarg :ptag
+         :reader ptag
+         :documentation "The ptag that was not found.")
+   (ptag-count :initarg :ptag-count
+             :reader :ptag-count
+             :documentation "The number of ptags.")))
+
+(defun get-cell (brep-container ptag)
+  (with-slots (cells) brep-container
+    (declare (type (vector cell) cells))
+    (when (or (>= ptag (length cells))
+              (< ptag 0))
+      (error 'invalid-ptag-error
+             :ptag ptag
+             :ptag-count (length cells)))
+    (aref cells ptag)))
+
 (defgeneric evaluate (brep-container cell &rest args)
   )
 
@@ -84,7 +102,7 @@
   (declare (type hash-table ht)
            (type (vector cell) cells)
            (type cell cell))
-  (let ((ptag (1+ (length cells))))
+  (let ((ptag (length cells)))
     (setf (ptag cell)  ptag)
     (vector-push-extend cell cells)
     (setf (gethash ptag ht) cell)
@@ -122,7 +140,7 @@
   (with-slots (cells faces) brep-container
     (add-cell cells
               faces
-              (make-instance 'edge
+              (make-instance 'face
                              :edges edge-ids))))
 
 (defun create-body (brep-container &rest face-ids)

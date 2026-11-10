@@ -24,7 +24,11 @@
 
    ;; A collection of related BREP
    #:brep-container
+   #:edges
+   #:faces
+   #:points
    #:add-cell
+   #:get-cell
    #:create-point
    #:create-edge
    #:create-face
