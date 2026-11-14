@@ -12,12 +12,16 @@
 
    (vao :initform 0)
    (program :initform nil)
-
-   (buffers)
-   (vertices)
-   (indices)
-   (brep-container)
-   (cells :initform nil)
+   (depth :initform 10)
+   (width :initform 10)
+   (height :Initform 10)
+   (buffers :initform nil)
+   (vertices :initform nil)
+   (indices :initform nil)
+   (brep-container :initarg
+                   :brep-container)
+   (cells :initarg :cells
+          :initform nil)
    ;;  (joystick :initform 0 :initarg :joystick)
    ))
 
@@ -34,7 +38,7 @@
 
 
 
-(defmethod initialize ((gl-window brep-window))
+(defmethod mingl:initialize ((gl-window brep-window))
   (with-slots (vao buffers vertices indices program) gl-window
     (setf vao (gl:gen-vertex-array))
     (gl:bind-vertex-array vao)
@@ -112,18 +116,20 @@
                                     #.(* 3 4))))))
   (call-next-method))
 
-(defmethod render ((window brep-window))
+(defmethod mingl:render ((window brep-window))
   (call-next-method)
-  (with-slots (vao buffers program primitive-type depth width height) window
+  (with-slots (vao buffers program depth width height) window
     (mingl:use-shader-program program)
+    (mingl:set-uniform program "view_transform"
+                 :mat4 (mingl:view-matrix window))
 
     (gl:bind-buffer :array-buffer (car buffers))
     (gl:bind-buffer :element-array-buffer (cadr buffers))
-    (gl:draw-elements primitive-type
+    (gl:draw-elements :points
                       (gl:make-null-gl-array :unsigned-int)
                       :count (* depth width height))))
 
-(defmethod cleanup ((window brep-window))
+(defmethod mingl:cleanup ((window brep-window))
   (when (slot-boundp window 'vertices)
     (with-slots (vao buffers vertices indices) window
       (gl:bind-vertex-array vao)
