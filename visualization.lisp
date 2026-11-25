@@ -28,6 +28,7 @@
 (defun display (brep-container &rest cells)
   (mingl:add-shader-search-directory (asdf:system-relative-pathname :brep "shaders/"))
   (let ((window (make-instance 'brep-window
+                               :3d-mouse-scale 1/20000
                                :brep-container brep-container
                                :cells cells
                                :use-main-thread t
